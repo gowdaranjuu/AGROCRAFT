@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌾 AgroCraft - Local Food Marketplace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #fffaf0;
+      margin: 0; padding: 0; text-align: center;
+    }
+    header {
+      background: linear-gradient(90deg, #ff7f50, #ff6347);
+      color: white; padding: 25px;
+      border-radius: 0 0 25px 25px;
+    }
+    header h1 { margin:0; font-size:2em; }
+    header button {
+      margin: 10px; padding:10px 20px; background:white; color:#ff6347;
+      border:none; border-radius:8px; cursor:pointer; font-weight:bold;
+    }
+    header button:hover { background:#ffe4e1; }
+    input, select, button, textarea {
+      margin:6px; padding:10px; border-radius:8px; border:1px solid #aaa;
+    }
+    .product-grid {
+      display:flex; flex-wrap:wrap; justify-content:center; gap:15px; padding:10px;
+    }
+    .product-card {
+      background:white; border-radius:15px; width:250px; padding:12px;
+      box-shadow:0 4px 8px rgba(0,0,0,0.1); text-align:center; transition:0.3s;
+    }
+    .product-card:hover { transform:scale(1.03); }
+    .product-card img { width:100%; height:160px; object-fit:cover; border-radius:12px; }
+    .category-title { color:#ff6347; margin-top:30px; font-size:1.6em; border-bottom:2px solid #ff6347; display:inline-block; padding-bottom:5px; }
+    #cartMessage, #farmerNotification {
+      padding: 12px; margin:10px auto; width:60%; border-radius:8px;
+      display:none; font-weight:bold;
+    }
+    #cartMessage { background:#c8e6c9; color:#1b5e20; }
+    #farmerNotification { background:#fff3cd; color:#856404; }
+    footer { margin-top:20px; background:#ff6347; color:white; padding:15px; border-radius:25px 25px 0 0; }
+    iframe { border:2px solid #ff7f50; border-radius:15px; margin:10px; }
+    .review { background:#f0f8ff; margin:5px 0; padding:5px; border-radius:5px; font-size:0.9em; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌾 WELCOME TO AGROCRAFT</h1>
+    <p>Connecting Farmers and Consumers – Fresh from Farm to Table</p>
+    <button onclick="setRole('farmer')">Farmer</button>
+    <button onclick="setRole('buyer')">Buyer</button>
+  </header>
+
+  <section id="searchSection">
+    <input type="text" id="searchBox" placeholder="🔍 Search fruits/vegetables..." onkeyup="searchProducts()">
+  </section>
+
+  <section id="filters">
+    <label>Category:</label>
+    <select id="categoryFilter" onchange="filterProducts()">
+      <option value="">All Products</option>
+      <option>vegetable</option>
+      <option>fruit</option>
+    </select>
+    <label>Location:</label>
+    <select id="locationFilter" onchange="filterProducts()">
+      <option value="">All Locations</option>
+      <option>Delhi</option><option>Mumbai</option><option>Bangalore</option>
+      <option>Pune</option><option>Chennai</option><option>Ooty</option>
+    </select>
+  </section>
+
+  <section id="addProductSection" style="display:none;">
+    <h2>Add New Product</h2>
+    <input type="text" id="prodName" placeholder="Product Name">
+    <input type="number" id="prodPrice" placeholder="Price (₹)">
+    <input type="text" id="prodSeller" placeholder="Seller Name">
+    <input type="text" id="prodLocation" placeholder="Location">
+    <input type="text" id="prodImage" placeholder="Image URL">
+    <select id="prodType">
+      <option value="vegetable">Vegetable</option>
+      <option value="fruit">Fruit</option>
+    </select>
+    <button onclick="addProduct()">Add Product</button>
+  </section>
+
+  <div id="cartMessage"></div>
+  <div id="farmerNotification"></div>
+
+  <main id="marketplace">
+    <h2 class="category-title">🥦 Fresh Vegetables</h2>
+    <section id="vegetableList" class="product-grid"></section>
+
+    <h2 class="category-title">🍉 Juicy Fruits</h2>
+    <section id="fruitList" class="product-grid"></section>
+  </main>
+
+  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d241317.15600295893!2d72.7410993971414!3d19.08219783972932!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b63f96b3f1a1%3A0x9b88b7ee9c987a0!2sMumbai!5e0!3m2!1sen!2sin!4v1691234567890!5m2!1sen!2sin"
+    width="90%" height="300" allowfullscreen loading="lazy"></iframe>
+
+  <footer>© 2025 AgroCraft | Fresh. Local. Sustainable.</footer>
+
+  <script>
+    let role=null;
+    let allProducts=[
+      {name:'Potato', price:30, seller:'Abhishek', location:'Delhi', image:'https://upload.wikimedia.org/wikipedia/commons/6/6f/Patates.jpg', type:'vegetable', rating:4, reviews:['Fresh & crispy!','Good quality']},
+      {name:'Tomato', price:25, seller:'Aditi', location:'Mumbai', image:'https://upload.wikimedia.org/wikipedia/commons/8/88/Bright_red_tomato_and_cross_section02.jpg', type:'vegetable', rating:5, reviews:['Juicy and fresh']},
+      {name:'Carrot', price:40, seller:'Vikram', location:'Pune', image:'https://upload.wikimedia.org/wikipedia/commons/3/3e/Carrots_of_many_colors.jpg', type:'vegetable', rating:4, reviews:['Sweet and crunchy']},
+      {name:'Onion', price:35, seller:'Kiran', location:'Bangalore', image:'https://upload.wikimedia.org/wikipedia/commons/2/25/Onions.jpg', type:'vegetable', rating:3, reviews:['Ok quality']},
+      {name:'Spinach', price:20, seller:'Sita', location:'Chennai', image:'https://upload.wikimedia.org/wikipedia/commons/0/02/Spinach_leaves.jpg', type:'vegetable', rating:5, reviews:['Very fresh']},
+      {name:'Cabbage', price:28, seller:'Manju', location:'Ooty', image:'https://upload.wikimedia.org/wikipedia/commons/5/5a/Cabbage_and_cross_section_on_white.jpg', type:'vegetable', rating:4, reviews:['Good for salads']},
+      {name:'Cauliflower', price:45, seller:'Dev', location:'Delhi', image:'https://upload.wikimedia.org/wikipedia/commons/3/3b/Cauliflower.jpg', type:'vegetable', rating:4, reviews:['Fresh and big heads']},
+      {name:'Apple', price:120, seller:'Deepa', location:'Shimla', image:'https://upload.wikimedia.org/wikipedia/commons/1/15/Red_Apple.jpg', type:'fruit', rating:5, reviews:['Sweet & crispy']},
+      {name:'Banana', price:50, seller:'Ravi', location:'Mumbai', image:'https://upload.wikimedia.org/wikipedia/commons/8/8a/Banana-Single.jpg', type:'fruit', rating:4, reviews:['Good taste']},
+      {name:'Mango', price:150, seller:'Raj', location:'Pune', image:'https://upload.wikimedia.org/wikipedia/commons/9/90/Hapus_Mango.jpg', type:'fruit', rating:5, reviews:['Very tasty']},
+      {name:'Orange', price:90, seller:'Karthik', location:'Chennai', image:'https://upload.wikimedia.org/wikipedia/commons/c/c4/Orange-Fruit-Pieces.jpg', type:'fruit', rating:4, reviews:['Juicy & fresh']},
+      {name:'Watermelon', price:60, seller:'Priya', location:'Bangalore', image:'https://upload.wikimedia.org/wikipedia/commons/f/fd/Watermelon_cross_BNC.jpg', type:'fruit', rating:4, reviews:['Perfect for summer']},
+      {name:'Pineapple', price:80, seller:'Anita', location:'Ooty', image:'https://upload.wikimedia.org/wikipedia/commons/c/cb/Pineapple_and_cross_section.jpg', type:'fruit', rating:3, reviews:['Slightly sour']}
+    ];
+
+    const farms=['Green Valley Farm','Fresh Roots Farm','NatureGrow Farm','AgroPure Fields','HappyHarvest Farm'];
+    let orders=[];
+
+    function setRole(r){role=r;document.getElementById('addProductSection').style.display=(role==='farmer')?'block':'none';loadProducts();}
+
+    function loadProducts(){displayProducts(allProducts);}
+
+    function displayProducts(products){
+      const vegList=document.getElementById('vegetableList');
+      const fruitList=document.getElementById('fruitList');
+      vegList.innerHTML='';fruitList.innerHTML='';
+
+      products.forEach(p=>{
+        const card=document.createElement('div');card.className='product-card';
+        const stars='⭐'.repeat(p.rating);
+        const farmOpts=farms.map(f=>`<option>${f}</option>`).join('');
+        const reviewsHTML=p.reviews.map(r=>`<div class="review">💬 ${r}</div>`).join('');
+        card.innerHTML=`
+          <img src="${p.image}" alt="${p.name}">
+          <h3>${p.name}</h3>
+          <p>Price: ₹${p.price}</p>
+          <p>Seller: ${p.seller}</p>
+          <p>Location: ${p.location}</p>
+          <p>Rating: ${stars}</p>
+          ${reviewsHTML}
+          <label>Quantity (kg):</label><input type="number" id="q_${p.name}" value="1" min="1" style="width:60px"><br>
+          <label>Farm:</label><select id="f_${p.name}">${farmOpts}</select><br>
+          <button onclick="placeOrder('${p.name}', ${p.price}, '${p.seller}')">Add to Cart 🛒</button>
+        `;
+        (p.type==='vegetable')?vegList.appendChild(card):fruitList.appendChild(card);
+      });
+    }
+
+    function placeOrder(name, price, seller){
+      const qty=document.getElementById(`q_${name}`).value;
+      const farm=document.getElementById(`f_${name}`).value;
+      const total=price*qty;
+      orders.push({product:name, qty, total, farm, buyer:'You', seller});
+      document.getElementById('cartMessage').innerHTML=`✅ Order Placed: ${qty} kg of ${name} from ${farm}. Total ₹${total}.`;
+      document.getElementById('cartMessage').style.display='block';
+      document.getElementById('farmerNotification').innerHTML=`📣 New Order for ${seller}: ${qty} kg of ${name} from ${farm} by You!`;
+      document.getElementById('farmerNotification').style.display='block';
+      setTimeout(()=>{document.getElementById('cartMessage').style.display='none';document.getElementById('farmerNotification').style.display='none';},4000);
+    }
+
+    function searchProducts(){const q=document.getElementById('searchBox').value.toLowerCase();displayProducts(allProducts.filter(p=>p.name.toLowerCase().includes(q)));}
+
+    function filterProducts(){const c=document.getElementById('categoryFilter').value;const l=document.getElementById('locationFilter').value;
+      displayProducts(allProducts.filter(p=>(!c||p.type===c)&&(!l||p.location===l)));
+    }
+
+    function addProduct(){const newP={
+      name:document.getElementById('prodName').value,
+      price:+document.getElementById('prodPrice').value,
+      seller:document.getElementById('prodSeller').value,
+      location:document.getElementById('prodLocation').value,
+      image:document.getElementById('prodImage').value,
+      type:document.getElementById('prodType').value,
+      rating:5,
+      reviews:['New Product']
+    };allProducts.push(newP);displayProducts(allProducts);alert('✅ Product added!');}
+
+    window.onload=loadProducts;
+  </script>
+</body>
+</html>
